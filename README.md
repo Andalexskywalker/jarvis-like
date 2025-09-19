@@ -1,10 +1,10 @@
-# Jarvis-Like 🗣️🤖
+# Jarvis-Like 
 
 A tiny, extensible Python assistant (text-first) you can run locally.  
 Type natural commands like “add -taskname-”, “show todos”, or “set timer 5m” and it routes to simple “skills”.  
 Designed to be easy to read, hack, and grow into your own “cartoon AI”.
 
-## ✨ Features (MVP)
+##  Features (MVP)
 -  **Rule-based NLU**: regex/keywords → intents + entities  
 -  **To-Do skill**: add and list tasks (JSON-backed storage)  
 -  **Timer skill**: set minute/second timers (APScheduler)  
@@ -12,7 +12,7 @@ Designed to be easy to read, hack, and grow into your own “cartoon AI”.
 -  **Modular**: drop-in skills folder, easy to add new commands  
 -  **Web UI** with Gradio (phone friendly)
 
-## 🗂 Project Structure
+##  Project Structure
 ```
 jarvis-like/
 ├─ main.py            # entry point: routes text → skills (CLI + optional Gradio)
@@ -90,16 +90,16 @@ if "what time" in t or "time now" in t:
 - **Memory** uses JSON so you don’t need a DB setup; swap to SQLite later if you like.
 - **APScheduler** runs timers in-process while the app is running.
 
-## 🤝 Contributing
+##  Contributing
 Issues and PRs are welcome! Good first contributions:
 - Add a small skill (weather, calculator, launcher)
 - Improve NLU patterns or tests
 - Polish the Gradio UI (history, buttons)
 
-## 📜 License
+##  License
 MIT — do whatever you want, just keep the notice.
 
-## ⚠️ Disclaimer
+##  Disclaimer
 This is a learning/prototyping project. It’s local-first and not hardened for production.  
 Add authentication/permissions and safety checks before exposing tools that control your system.
 
