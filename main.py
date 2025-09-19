@@ -1,6 +1,7 @@
 # main.py
 from nlu import parse_intent
-from skills import todo, timer
+from skills import todo, timer, clock, calc, weather, launcher
+
 
 def handle_text(text):
     parsed = parse_intent(text)
@@ -15,25 +16,75 @@ def handle_text(text):
         return timer.set_timer_seconds(ent["seconds"])
     if intent == "smalltalk.greet":
         return "Hey — try 'add buy milk', 'show todos', or 'set timer 5m'."
+    if intent == "clock.time":
+        return clock.handle_time(ent)
+    if intent == "clock.date":
+        return clock.handle_date(ent)
+    if intent == "calc.eval":
+        return calc.handle_calc(ent)
+    if intent == "todo.done":
+        return todo.handle_todo_done(ent)
+
+    if intent == "todo.delete":
+        return todo.handle_todo_delete(ent)
+    
+    if intent == "weather.now":
+        return weather.handle_weather(ent)
+
+    if intent == "launch.open":
+        return launcher.handle_open(ent)
+    if intent == "confirm.yes":
+        return launcher.handle_confirm_yes(ent)
+    if intent == "confirm.no":
+        return launcher.handle_confirm_no(ent)
+    if intent == "help":
+        return help_text()
+
+
     return "Sorry, I didn't get that. Try: 'add buy milk' / 'show todos' / 'set timer 5m'."
+    
+
+def help_text():
+    lines = [
+        "Commands:",
+        "- add <task>                → add a todo",
+        "- show todos                → list todos",
+        "- done <id>                 → mark todo as done",
+        "- del <id>                  → delete a todo",
+        "- set timer 5m              → timer in minutes",
+        "- timer 30s                 → timer in seconds",
+        "- what time                 → current time",
+        "- what date                 → current date",
+        "- calc <expr>               → calculator (e.g., calc 2+2*3)",
+        "- weather in <city>         → weather now (e.g., weather in Lisbon)",
+        "- open <whitelisted target> → launcher (e.g., open youtube)",
+        "- help                      → this message",
+    ]
+    return "\n".join(lines)
 
 # -------- UI GRADIO --------
 def gradio_app():
     import gradio as gr
 
     with gr.Blocks(title="Jarvis-Like") as demo:
-        gr.Markdown("# Jarvis-Like 🗣️🤖\nType a command below.")
-        inp = gr.Textbox(lines=1, placeholder="e.g., add buy milk / show todos / set timer 1m")
-        out = gr.Textbox(label="Assistant")
+        gr.Markdown("# Jarvis-Like 🗣️🤖")
+        chat = gr.Chatbot(height=360)
+        inp = gr.Textbox(placeholder="e.g., add buy milk / show todos / set timer 1m", lines=1)
+        clear = gr.Button("Clear")
 
-        def on_submit(txt):
-            return handle_text(txt)
+        def on_submit(user_msg, history):
+            if not user_msg.strip():
+                return history, ""
+            bot_reply = handle_text(user_msg)
+            history = history + [(user_msg, bot_reply)]
+            return history, ""
 
-        inp.submit(on_submit, inputs=inp, outputs=out)
-        gr.Button("Send").click(on_submit, inputs=inp, outputs=out)
+        inp.submit(on_submit, inputs=[inp, chat], outputs=[chat, inp])
+        clear.click(lambda: [], outputs=chat)
 
-    # LAN: demo.launch(server_name="0.0.0.0")  # abre na rede local (telemóvel)
-    demo.launch()  # só no teu PC por defeito
+    # demo.launch(server_name="0.0.0.0")  # LAN
+    demo.launch()
+
 
 # -------- CLI --------
 def cli_loop():
