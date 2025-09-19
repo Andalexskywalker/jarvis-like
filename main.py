@@ -30,11 +30,11 @@ if __name__ == "__main__":
         print(out)
 
 # optional: Gradio UI (uncomment to run)
-# def gradio_app():
-#     with gr.Blocks() as demo:
-#         txt = gr.Textbox(placeholder="Type a command", lines=1)
-#         out = gr.Textbox(label="Assistant")
-#         txt.submit(lambda v: handle_text(v), inputs=txt, outputs=out)
-#     demo.launch()
-#
+def gradio_app():
+    with gr.Blocks() as demo:
+        txt = gr.Textbox(placeholder="Type a command", lines=1)
+        out = gr.Textbox(label="Assistant")
+        txt.submit(lambda v: handle_text(v), inputs=txt, outputs=out)
+    demo.launch()
+
 # if you want a phone-friendly UI, run gradio_app()
