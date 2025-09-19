@@ -26,7 +26,7 @@ jarvis-like/
 └─ README.md
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 ```bash
 # 1) Create and activate a virtual env (recommended)
 python -m venv venv
