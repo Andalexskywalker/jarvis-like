@@ -21,7 +21,8 @@ jarvis-like/
 ├─ skills/
 │   ├─ __init__.py
 │   ├─ todo.py        # todo.add / todo.show
-│   └─ timer.py       # timer.set_minutes / timer.set_seconds
+│   ├─ timer.py       # timer.set_minutes / timer.set_seconds
+|   └─ other...       # the rest of the skills added
 ├─ requirements.txt
 └─ README.md
 ```
