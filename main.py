@@ -1,12 +1,10 @@
 # main.py
 from nlu import parse_intent
 from skills import todo, timer
-import gradio as gr
 
 def handle_text(text):
     parsed = parse_intent(text)
-    intent = parsed["intent"]
-    ent = parsed["entities"]
+    intent = parsed["intent"]; ent = parsed["entities"]
     if intent == "todo.add":
         return todo.handle_todo_add(ent)
     if intent == "todo.show":
@@ -16,25 +14,74 @@ def handle_text(text):
     if intent == "timer.set_seconds":
         return timer.set_timer_seconds(ent["seconds"])
     if intent == "smalltalk.greet":
-        return "Hey — what would you like to do? You can say 'add buy milk' or 'set timer 10m'."
-    return "Sorry, I didn't get that. Try: 'add buy milk' or 'show todos' or 'set timer 5m'."
+        return "Hey — try 'add buy milk', 'show todos', or 'set timer 5m'."
+    return "Sorry, I didn't get that. Try: 'add buy milk' / 'show todos' / 'set timer 5m'."
 
-# minimal CLI:
-if __name__ == "__main__":
-    print("Jarvis-lite (text mode). Type 'exit' to quit.")
+# -------- UI GRADIO --------
+def gradio_app():
+    import gradio as gr
+
+    with gr.Blocks(title="Jarvis-Like") as demo:
+        gr.Markdown("# Jarvis-Like 🗣️🤖\nType a command below.")
+        inp = gr.Textbox(lines=1, placeholder="e.g., add buy milk / show todos / set timer 1m")
+        out = gr.Textbox(label="Assistant")
+
+        def on_submit(txt):
+            return handle_text(txt)
+
+        inp.submit(on_submit, inputs=inp, outputs=out)
+        gr.Button("Send").click(on_submit, inputs=inp, outputs=out)
+
+    # LAN: demo.launch(server_name="0.0.0.0")  # abre na rede local (telemóvel)
+    demo.launch()  # só no teu PC por defeito
+
+# -------- CLI --------
+def cli_loop():
+    print("Jarvis-like (text mode). Type 'exit' to quit.")
     while True:
-        text = input("> ")
+        try:
+            text = input("> ")
+        except (EOFError, KeyboardInterrupt):
+            break
         if text.strip().lower() in ("exit","quit"):
             break
-        out = handle_text(text)
-        print(out)
+        print(handle_text(text))
 
-# optional: Gradio UI (uncomment to run)
-def gradio_app():
-    with gr.Blocks() as demo:
-        txt = gr.Textbox(placeholder="Type a command", lines=1)
-        out = gr.Textbox(label="Assistant")
-        txt.submit(lambda v: handle_text(v), inputs=txt, outputs=out)
-    demo.launch()
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ui", action="store_true", help="run Gradio web UI")
+    parser.add_argument("--lan", action="store_true", help="expose UI on LAN")
+    args = parser.parse_args()
 
-# if you want a phone-friendly UI, run gradio_app()
+    if args.ui:
+        if args.lan:
+            # lança na rede local (telemóvel no mesmo Wi-Fi)
+            import gradio as gr
+            gr.set_static_paths([])  # opcional, só para evitar avisos
+            # re-lança com server_name
+            import gradio as gr
+            with gr.Blocks() as empty: pass
+            # chamamos a função normal mas ajustamos launch abaixo:
+        # chamar a app mas ajustando o launch:
+        import gradio as gr
+        with gr.Blocks() as _tmp: pass
+        # hack simples: re-lançar com parâmetros
+        # mais fácil: chamar diretamente:
+        if args.lan:
+            # reimplement launch com LAN
+            import gradio as gr
+            def launch_lan():
+                import gradio as gr
+                with gr.Blocks(title="Jarvis-Like") as demo:
+                    gr.Markdown("# Jarvis-Like 🗣️🤖\nType a command below.")
+                    inp = gr.Textbox(lines=1, placeholder="e.g., add buy milk / show todos / set timer 1m")
+                    out = gr.Textbox(label="Assistant")
+                    inp.submit(lambda t: handle_text(t), inputs=inp, outputs=out)
+                    gr.Button("Send").click(lambda t: handle_text(t), inputs=inp, outputs=out)
+                demo.launch(server_name="0.0.0.0", server_port=7860)
+            launch_lan()
+        else:
+            gradio_app()
+    else:
+        cli_loop()

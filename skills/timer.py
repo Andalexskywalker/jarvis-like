@@ -1,19 +1,23 @@
 # skills/timer.py
+from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
-from threading import Event
-import time
 
+# 1) Um único scheduler global em background
 _scheduler = BackgroundScheduler()
+# start() é idempotente; se já estiver a correr, ignora
 _scheduler.start()
 
-def _alarm(message):
-    print("\n⏰ TIMER:", message)  # placeholder - replace with TTS later
+def _alarm(message: str):
+    # Por agora só imprime. Mais tarde: TTS/notify.
+    print("\n⏰ TIMER:", message)
 
-def set_timer_seconds(seconds, message="Timer finished"):
-    run_at = time.time() + seconds
-    _scheduler.add_job(_alarm, 'date', run_date=time.fromtimestamp(run_at), args=[message])
-    return f"Timer set for {seconds} seconds."
+def set_timer_seconds(seconds: int, message: str = "Timer finished"):
+    if seconds <= 0:
+        return "Timer must be > 0 seconds."
+    run_at = datetime.now() + timedelta(seconds=int(seconds))
+    _scheduler.add_job(_alarm, 'date', run_date=run_at, args=[message])
+    return f"Timer set for {int(seconds)} seconds."
 
-# convenience wrapper for minutes/hours in NLU
-def set_timer_minutes(minutes, message="Timer finished"):
-    return set_timer_seconds(int(minutes*60), message)
+def set_timer_minutes(minutes: int, message: str = "Timer finished"):
+    secs = int(minutes) * 60
+    return set_timer_seconds(secs, message)
