@@ -1,107 +1,58 @@
-# Jarvis-Like 
+# Friday AI 👩‍💻
+> *A self-healing, intelligent desktop agent powered by Google Gemini.*
 
-A tiny, extensible Python assistant (text-first) you can run locally.  
-Type natural commands like “add -taskname-”, “show todos”, or “set timer 5m” and it routes to simple “skills”.  
-Designed to be easy to read, hack, and grow into your own “cartoon AI”.
+Friday is not just a chatbot. She is an **Autonomous Agent** capable of executing Python skills on your local machine. She understands context, manages her own API connectivity (Self-Healing Client), and interacts with the OS to automate tasks.
 
-##  Features (MVP)
--  **Rule-based NLU**: regex/keywords → intents + entities  
--  **To-Do skill**: add and list tasks (JSON-backed storage)  
--  **Timer skill**: set minute/second timers (APScheduler)  
--  **Simple memory**: tiny JSON “database” (`memory.json`)  
--  **Modular**: drop-in skills folder, easy to add new commands  
--  **Web UI** with Gradio (phone friendly)
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![AI](https://img.shields.io/badge/AI-Gemini_1.5-orange.svg)
+![Architecture](https://img.shields.io/badge/Architecture-Function_Calling-purple.svg)
 
-##  Project Structure
-```
-jarvis-like/
-├─ main.py            # entry point: routes text → skills (CLI + optional Gradio)
-├─ nlu.py             # intent parser (regex keywords → intents/entities)
-├─ memory.py          # JSON storage (todos, key-value)
-├─ skills/
-│   ├─ __init__.py
-│   ├─ todo.py        # todo.add / todo.show
-│   ├─ timer.py       # timer.set_minutes / timer.set_seconds
-|   └─ other...       # the rest of the skills added
-├─ requirements.txt
-└─ README.md
-```
+## 🧠 Architecture
+This project demonstrates modern **AI Engineering** patterns:
 
-##  Quick Start
+1.  **Orchestrator (`agent.py`)**: The reasoning loop. It maintains context and decides *which* tool to call based on user intent.
+2.  **Dynamic Registry (`tools_registry.py`)**: A scalable plugin system. Tools are defined with typed schemas, allowing the LLM to understand how to use them (Function Calling).
+3.  **Self-Healing Client (`llm_client.py`)**: A custom zero-dependency wrapper for the Gemini API that:
+    *   Dynamically probes endpoints to find the fastest available model (Flash vs Pro).
+    *   Handles Rate Limits (`429`) with exponential backoff.
+    *   Prevents `404` errors by validating model versions on startup.
+
+## 🛠️ Skills
+Friday has "hands" to control your PC:
+*   **🎵 Media**: Control volume, mute audio, and play music on YouTube.
+*   **📂 Organizer**: Automatically scan Desktop and file downloads into categorized folders (Images, Docs, Installers).
+*   **⚡ Automation**: Set timers, reminders, and launch applications.
+*   **🌦️ Real-time**: Check weather and date.
+
+## 🚀 Quick Start
+
+### 1. Setup
 ```bash
-# 1) Create and activate a virtual env (recommended)
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# macOS/Linux
-# source venv/bin/activate
-
-# 2) Install deps
+# Clone and install dependencies
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
+```
 
-# 3) Run (CLI mode)
+### 2. API Key
+Create a `.env` file with your Google Gemini Key (Free Tier):
+```ini
+GEMINI_API_KEY=AIzaSy...
+```
+
+### 3. Run
+```bash
 python main.py
 ```
+*Note: Friday will automatically detect the best model version for your key.*
 
-**Try these commands in the CLI:**
-```
-add buy milk
-show todos
-set timer 1m
-set timer 30s
-```
+## 📸 Example Usage
+> **User**: "Friday, it's messy here. Clean up my desktop."  
+> **Friday**: *Scans desktop, moves 12 files to 'Images' and 'Documents' folders.*  
+> **Friday**: "Done! I organized 12 files for you."
 
-> A new file will be added in you file, memory.json, where it will add these informations.
-
-## Web UI (Gradio)
-This little app uses gradio as UI system, Gradio will open a local URL you can also visit from your phone (same Wi-Fi).  
-
-## Adding a New Skill (example)
-1) Create a new file in `skills/` (e.g., `clock.py`) with a simple handler:
-```python
-# skills/clock.py
-from datetime import datetime
-
-def handle_time(_entities=None):
-    return "Time now: " + datetime.now().strftime("%H:%M:%S")
-```
-2) Import and route in **`main.py`**:
-```python
-from skills import clock
-# ...
-if intent == "clock.time":
-    return clock.handle_time(ent)
-```
-3) Add a regex in **`nlu.py`** to recognize the command:
-```python
-if "what time" in t or "time now" in t:
-    return {"intent": "clock.time", "entities": {}}
-```
-
-##  Roadmap
--  **Speech**: Whisper/Vosk (STT) + pyttsx3/edge-tts (TTS)
--  **Smarter NLU**: scikit-learn classifier for many intents
--  **Better timers**: desktop notifications or TTS alarm
--  **Richer memory**: mark todo done, delete, categories, due dates
--  **FastAPI backend**: clean API for mobile/web clients
--  **Android (Termux/Kivy)** or **PWA** for phone-like experience
-
-##  Tech Notes
-- **NLU** is intentionally simple: easy to read and extend, its also my first time making thes kind of understanding systems so it has to be simple.
-- **Memory** uses JSON so you don’t need a DB setup; swap to SQLite later if you like.
-- **APScheduler** runs timers in-process while the app is running.
-
-##  Contributing
-Issues and PRs are welcome! Good first contributions:
-- Add a small skill (weather, calculator, launcher)
-- Improve NLU patterns or tests
-- Polish the Gradio UI (history, buttons)
-
-##  License
-MIT — do whatever you want, just keep the notice.
-
-##  Disclaimer
-This is a learning/prototyping project. It’s local-first and not hardened for production.  
-Add authentication/permissions and safety checks before exposing tools that control your system.
+> **User**: "Play some Lo-Fi beats and set volume to 30%."  
+> **Friday**: *Sets volume to 30, opens YouTube.*
 
 ---
+*Built as a portfolio showcase of AI Agent architecture.*
