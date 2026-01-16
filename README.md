@@ -4,7 +4,7 @@
 Friday is not just a chatbot. She is an **Autonomous Agent** capable of executing Python skills on your local machine. She understands context, manages her own API connectivity (Self-Healing Client), and interacts with the OS to automate tasks.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
-![AI](https://img.shields.io/badge/AI-Gemini_1.5-orange.svg)
+![AI](https://img.shields.io/badge/AI-Gemini_2.5-flash-orange.svg)
 ![Architecture](https://img.shields.io/badge/Architecture-Function_Calling-purple.svg)
 
 ## 🧠 Architecture
