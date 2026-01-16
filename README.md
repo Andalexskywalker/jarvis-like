@@ -17,6 +17,29 @@ This project demonstrates modern **AI Engineering** patterns:
     *   Handles Rate Limits (`429`) with exponential backoff.
     *   Prevents `404` errors by validating model versions on startup.
 
+```mermaid
+graph TD
+    User([User]) <--> CLI[Terminal / UI]
+    CLI <--> Agent[Agent Orchestrator]
+    
+    subgraph Brain ["🧠 Brain (LLM Client)"]
+        Agent <--> LLM[Gemini API Wrapper]
+        LLM -- "Self-Healing" --> Model{Model Selector}
+        Model -- "Rate Limit Retry" --> Google[Google Gemini]
+    end
+    
+    subgraph Body ["🛠️ Tools Registry"]
+        Agent -- "Function Call" --> Registry[Tools Registry]
+        Registry --> Skills
+        
+        subgraph Skills ["Hands (Skills)"]
+            Media[Media Control]
+            Files[File Organizer]
+            System[OS Utils]
+        end
+    end
+```
+
 ## 🛠️ Skills
 Friday has "hands" to control your PC:
 *   **🎵 Media**: Control volume, mute audio, and play music on YouTube.
