@@ -5,11 +5,14 @@ import time
 import urllib.request
 import urllib.error
 
+from dotenv import load_dotenv
+
 class LLMClient:
     def __init__(self):
-        self.api_key = self._load_env_key()
+        load_dotenv()
+        self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            print("❌ Error: GEMINI_API_KEY not found in .env")
+            print("❌ Error: GEMINI_API_KEY not found in environment or .env")
             return
 
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
@@ -19,15 +22,9 @@ class LLMClient:
         print(f"✅ Connected to: {self.model_name}")
         
         self.url = f"{self.base_url}/{self.model_name}:generateContent?key={self.api_key}"
+    
+    # _load_env_key is no longer needed
 
-    def _load_env_key(self):
-        try:
-            with open(".env", "r") as f:
-                for line in f:
-                    if line.startswith("GEMINI_API_KEY="):
-                        return line.split("=", 1)[1].strip()
-        except:
-            return None
     
     def _resolve_working_model(self):
         candidates = []
@@ -39,17 +36,32 @@ class LLMClient:
                 data = json.loads(resp.read().decode())
                 all_models = [m['name'] for m in data.get("models", [])]
                 
-                # Priority: Flash -> Pro
-                flash_models = [m for m in all_models if "flash" in m and "gemini" in m]
-                pro_models = [m for m in all_models if "pro" in m and "gemini" in m]
+                # Priority: Stable Flash -> Stable Pro -> Experimental
                 
-                # Sort to prefer shorter names (usually stable aliases) or specific versions?
-                # Actually, let's just try them all.
-                candidates = flash_models + pro_models
+                # Helper to check if model is "stable" (no 'exp' or 'preview' in name, ideally)
+                def is_stable(name):
+                    return "exp" not in name and "preview" not in name
+
+                # Filter groups
+                stable_flash = [m for m in all_models if "flash" in m and "gemini" in m and is_stable(m)]
+                stable_pro = [m for m in all_models if "pro" in m and "gemini" in m and is_stable(m)]
+                experimental = [m for m in all_models if ("exp" in m or "preview" in m) and "gemini" in m]
+                
+                # Sort stable by length (shorter is often the main alias, e.g. gemini-2.0-flash vs gemini-2.0-flash-001)
+                stable_flash.sort(key=len)
+                stable_pro.sort(key=len)
+                
+                candidates = stable_flash + stable_pro + experimental
         except Exception as e:
             print(f"⚠️ Model list failed: {e}")
-            candidates = ["models/gemini-1.5-flash", "models/gemini-pro"]
-
+            # Fallback list - Prioritize stable
+            candidates = [
+                "models/gemini-2.0-flash", 
+                "models/gemini-1.5-flash", 
+                "models/gemini-1.5-flash-latest",
+                "models/gemini-pro"
+            ]
+        
         # 2. Test candidates
         for model in candidates:
             # print(f"Testing {model}...") 
@@ -61,14 +73,15 @@ class LLMClient:
                 urllib.request.urlopen(req)
                 return model
             except urllib.error.HTTPError as e:
-                # 429 means it exists and we have quota issues (so it's valid, we just need to wait)
+                # 429 means it exists but we have quota issues. 
                 if e.code == 429:
-                    return model
+                    print(f"⚠️ {model} is rate limited. Skipping...")
+                    continue
                 # 404 or 400 means problematic.
             except:
                 continue
                 
-        return "models/gemini-1.5-flash" # Ultimate fallback
+        return "models/gemini-2.0-flash" # Ultimate fallback (Stable)
 
     def generate_with_tools(self, system_instruction, prompt, tools_schema=None):
         if not self.api_key: return "Error: No API Key."
@@ -86,8 +99,10 @@ class LLMClient:
             headers={"Content-Type": "application/json"}
         )
         
-        # Retry Loop
-        max_retries = 3
+        # Retry Loop with Exponential Backoff
+        max_retries = 5
+        base_delay = 5  # Start with 5 seconds
+        
         for attempt in range(max_retries):
             try:
                 with urllib.request.urlopen(req) as response:
@@ -98,11 +113,12 @@ class LLMClient:
             
             except urllib.error.HTTPError as e:
                 if e.code == 429:
-                    print(f"⏳ Rate limited. Waiting 20 seconds... (Attempt {attempt+1}/{max_retries})")
-                    time.sleep(20)
+                    wait_time = base_delay * (2 ** attempt)  # 5, 10, 20, 40, 80
+                    print(f"⏳ Rate limited. Waiting {wait_time} seconds... (Attempt {attempt+1}/{max_retries})")
+                    time.sleep(wait_time)
                     continue
                 return f"HTTP Error {e.code}: {e.read().decode()}"
             except Exception as e:
                 return f"Error: {str(e)}"
         
-        return "Error: Rate limit exceeded."
+        return "Error: Rate limit exceeded after multiple retries."

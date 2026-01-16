@@ -1,27 +1,42 @@
 
 # tools_registry.py
 import inspect
-from skills import timer, todo, weather, launcher, media, organizer
+
 
 class ToolsRegistry:
     def __init__(self):
         self.tool_map = {}
-        # We manually register skills here for safety and clarity
-        self.register("timer.set", timer.set_timer_minutes, "Set a timer for N minutes. Args: minutes (int)")
-        # In a real agent, we'd handle seconds too, or make a unified function
-        self.register("todo.add", todo.handle_todo_add, "Add a task to the todo list. Args: text (str)")
-        self.register("todo.show", todo.handle_todo_show, "Show current todos. Args: none")
-        self.register("weather.get", weather.handle_weather, "Get weather. Args: city (str)")
-        self.register("app.open", launcher.handle_open, "Open an app. Args: target (str) e.g. 'notepad', 'youtube'")
         
-        # Media Tools
-        self.register("media.volume", media.set_volume, "Set volume percentage. Args: level (int 0-100)")
-        self.register("media.mute", media.mute, "Mute/Unmute system audio.")
-        self.register("media.play", media.play_music, "Search and play music on YouTube. Args: query (str)")
-        
-        # Organizer Tools
-        self.register("files.organize", organizer.organize_desktop, "Organize Desktop files into folders. Args: none")
-        self.register("files.find", organizer.find_file, "Find a file in User Home. Args: name (str)")
+        # Robust Skills Loading
+        # 1. System / Core (Usually safe)
+        try:
+            from skills import timer, todo, launcher, organizer
+            self.register("timer.set", timer.set_timer_minutes, "Set a timer for N minutes. Args: minutes (int)")
+            self.register("todo.add", todo.handle_todo_add, "Add a task to the todo list. Args: text (str)")
+            self.register("todo.show", todo.handle_todo_show, "Show current todos. Args: none")
+            self.register("app.open", launcher.handle_open, "Open an app. Args: target (str) e.g. 'notepad', 'youtube'")
+            self.register("files.organize", organizer.organize_desktop, "Organize Desktop files into folders. Args: none")
+            self.register("files.find", organizer.find_file, "Find a file in User Home. Args: name (str)")
+        except ImportError as e:
+            print(f"⚠️ Warning: Core skills failed to load: {e}")
+
+        # 2. Weather (Requires requests?)
+        try:
+            from skills import weather
+            self.register("weather.get", weather.handle_weather, "Get weather. Args: city (str)")
+        except ImportError as e:
+             print(f"⚠️ Warning: Weather skill failed to load: {e}")
+
+        # 3. Media (Requires comtypes/pycaw - PROBABLY FLAKY)
+        try:
+            from skills import media
+            
+            # Media Tools
+            self.register("media.volume", media.set_volume, "Set volume percentage. Args: level (int 0-100)")
+            self.register("media.mute", media.mute, "Mute/Unmute system audio.")
+            self.register("media.play", media.play_music, "Search and play music on YouTube. Args: query (str)")
+        except ImportError as e:
+            print(f"⚠️ Warning: Media skills (volume/music) failed to load: {e}")
 
     def register(self, name, func, description):
         self.tool_map[name] = {
