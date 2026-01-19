@@ -5,9 +5,27 @@ import shutil
 from pathlib import Path
 
 def get_desktop_path():
-    return os.path.join(os.path.join(os.environ['USERPROFILE']), 'OneDrive', 'Ambiente de Trabalho') 
-    # Adjusted for your specific path structure since I saw "OneDrive\Ambiente de Trabalho" earlier.
-    # A generic one would be os.path.expanduser("~/Desktop") but your setup is specific.
+    """
+    Finds the Desktop path dynamically, handling OneDrive and local setups.
+    """
+    home = Path(os.environ['USERPROFILE'])
+    
+    # Priority 1: OneDrive Desktop folders (Common in multi-lang setups)
+    onedrive_options = [
+        home / "OneDrive" / "Desktop",
+        home / "OneDrive" / "Ambiente de Trabalho",
+        home / "OneDrive" / "Escritorio"
+    ]
+    
+    for p in onedrive_options:
+        if p.exists(): return str(p)
+        
+    # Priority 2: Standard Home Desktop
+    local_desktop = home / "Desktop"
+    if local_desktop.exists(): return str(local_desktop)
+    
+    # Fallback: Python's expanduser
+    return os.path.expanduser("~/Desktop")
 
 def organize_desktop(args=None):
     """
@@ -82,3 +100,37 @@ def find_file(query):
         return f"No files found matching '{query}'."
         
     return "Found:\n" + "\n".join(matches)
+
+def move_file_custom(file_name, target_folder):
+    """
+    Moves a specific file to a target folder.
+    Args:
+        file_name (str): Name or path of the file.
+        target_folder (str): Name or path of the destination folder.
+    """
+    desktop = Path(get_desktop_path())
+    
+    # 1. Resolve Source Path
+    source_path = Path(file_name)
+    if not source_path.exists():
+        # Try looking on Desktop
+        source_path = desktop / file_name
+        if not source_path.exists():
+            return f"Error: Could not find file '{file_name}'."
+            
+    # 2. Resolve Target Path
+    dest_path = Path(target_folder)
+    if not dest_path.is_absolute():
+        # Assume it's a folder on the Desktop
+        dest_path = desktop / target_folder
+        
+    # Ensure target folder exists
+    dest_path.mkdir(parents=True, exist_ok=True)
+    
+    # 3. Move
+    try:
+        final_dest = dest_path / source_path.name
+        shutil.move(str(source_path), str(final_dest))
+        return f"Successfully moved '{source_path.name}' to '{dest_path}'."
+    except Exception as e:
+        return f"❌ Move failed: {e}"

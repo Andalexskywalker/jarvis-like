@@ -10,6 +10,8 @@ WHITELIST = {
     "google":  "https://www.google.com",
     "stack":   "https://stackoverflow.com",
     "linkedin":"https://www.linkedin.com",
+    "notepad": "notepad.exe",
+    "calculator": "calc.exe",
     # apps are trickier; prefer URLs. Add paths only if you know them.
 }
 
@@ -21,8 +23,10 @@ def handle_open(entities):
         return "Open what? e.g., open youtube"
     if target not in WHITELIST:
         return f"'{target}' is not in my safe list. Allowed: {', '.join(WHITELIST.keys())}"
-    set_(PENDING_KEY, target)
-    return f"Open {target}? Reply YES to confirm or NO to cancel."
+    
+    url = WHITELIST[target]
+    ok = _launch(url)
+    return f"Opening {target}..." if ok else f"Failed to open {target}."
 
 def _launch(url_or_path):
     # Prefer URLs

@@ -4,8 +4,9 @@
 Friday is not just a chatbot. She is an **Autonomous Agent** capable of executing Python skills on your local machine. She understands context, manages her own API connectivity (Self-Healing Client), and interacts with the OS to automate tasks.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
-![AI](https://img.shields.io/badge/AI-Gemini_2.5-flash-orange.svg)
+![AI](https://img.shields.io/badge/AI-Gemini_2.0-flash-orange.svg)
 ![Architecture](https://img.shields.io/badge/Architecture-Function_Calling-purple.svg)
+![Status](https://img.shields.io/badge/Status-Stable-green.svg)
 
 ## 🧠 Architecture
 This project demonstrates modern **AI Engineering** patterns:
@@ -16,10 +17,11 @@ This project demonstrates modern **AI Engineering** patterns:
     *   Dynamically probes endpoints to find the fastest available model (Flash vs Pro).
     *   Handles Rate Limits (`429`) with exponential backoff.
     *   Prevents `404` errors by validating model versions on startup.
+4.  **Robust Persistence (`main.py`)**: Implements a Singleton Lock and Ghost Process cleanup to ensure reliability in background operation.
 
 ```mermaid
 graph TD
-    User([User]) <--> CLI[Terminal / UI]
+    User([User]) <--> CLI[Terminal / UI / Tray]
     CLI <--> Agent[Agent Orchestrator]
     
     subgraph Brain ["🧠 Brain (LLM Client)"]
@@ -36,6 +38,8 @@ graph TD
             Media[Media Control]
             Files[File Organizer]
             System[OS Utils]
+            Vision[Computer Vision]
+            Clipboard[Clipboard Manager]
         end
     end
 ```
@@ -43,8 +47,10 @@ graph TD
 ## 🛠️ Skills
 Friday has "hands" to control your PC:
 *   **🎵 Media**: Control volume, mute audio, and play music on YouTube.
-*   **📂 Organizer**: Automatically scan Desktop and file downloads into categorized folders (Images, Docs, Installers).
-*   **⚡ Automation**: Set timers, reminders, and launch applications.
+*   **📂 Organizer**: Automatically scan Desktop and file downloads into categorized folders.
+*   **⚡ Automation**: Set timers, reminders (Windows Toast), and launch applications.
+*   **📋 Clipboard**: Read from and write to your system clipboard for quick summarization.
+*   **📸 Vision**: Take screenshots of your desktop to answer questions about what you're seeing.
 *   **🌦️ Real-time**: Check weather and date.
 
 ## 🚀 Quick Start
@@ -52,6 +58,8 @@ Friday has "hands" to control your PC:
 ### 1. Setup
 ```bash
 # Clone and install dependencies
+git clone https://github.com/Andalexskywalker/jarvis-like.git
+cd jarvis-like
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
@@ -65,17 +73,17 @@ GEMINI_API_KEY=AIzaSy...
 
 ### 3. Run
 ```bash
-python main.py
+python main.py --tray
 ```
 *Note: Friday will automatically detect the best model version for your key.*
 
 ## 📸 Example Usage
-> **User**: "Friday, it's messy here. Clean up my desktop."  
-> **Friday**: *Scans desktop, moves 12 files to 'Images' and 'Documents' folders.*  
-> **Friday**: "Done! I organized 12 files for you."
+> **User**: "Friday, look at my clipboard and fix the python code in it."  
+> **Friday**: *Reads clipboard, fixes syntax error, pastes it back.*  
+> **Friday**: "I've fixed the indentation error and placed the code back on your clipboard."
 
-> **User**: "Play some Lo-Fi beats and set volume to 30%."  
-> **Friday**: *Sets volume to 30, opens YouTube.*
+> **User**: "Clean up my desktop."  
+> **Friday**: *Scans desktop, moves 12 files to 'Images' and 'Documents' folders.*
 
 ---
 *Built as a portfolio showcase of AI Agent architecture.*

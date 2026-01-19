@@ -1,0 +1,9 @@
+[Mon Jan 19 17:58:08 2026] --- Friday Boot Sequence Started ---
+[Mon Jan 19 17:58:08 2026] CWD: C:\Users\andal\OneDrive\Ambiente de Trabalho\projetos\jarvis-like-1
+[Mon Jan 19 17:58:08 2026] Executable: C:\Users\andal\OneDrive\Ambiente de Trabalho\projetos\jarvis-like-1\.venv\Scripts\pythonw.exe
+[Mon Jan 19 17:58:08 2026] Checking Singleton Lock...
+[Mon Jan 19 17:58:08 2026] Found lock file with PID: 3776
+[Mon Jan 19 17:58:08 2026] Process does not exist (Stale lock). overwriting.
+[Mon Jan 19 17:58:08 2026] Lock acquired. New PID: 8928
+[Mon Jan 19 17:58:08 2026] Initializing Agent()...
+[Mon Jan 19 17:58:17 2026] Agent initialized successfully.

@@ -1,13 +1,32 @@
-
 # skills/media.py
 from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
+from comtypes import CoInitialize, CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import webbrowser
 
 def _get_volume_interface():
-    devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+    # Ensure COM is initialized
+    try:
+        CoInitialize()
+    except:
+        pass
+        
+    try:
+        devices = AudioUtilities.GetSpeakers()
+        # Handle various pycaw object wrappers
+        if hasattr(devices, "Activate"):
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        elif hasattr(devices, "_device") and hasattr(devices._device, "Activate"):
+            interface = devices._device.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+        else:
+             # Last resort: try to cast or use the item if it's a collection
+             try:
+                 interface = devices[0].Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+             except:
+                 raise Exception(f"Device object {type(devices)} missing Activate method.")
+    except Exception as e:
+         raise Exception(f"Volume activation failed: {e}")
+
     return cast(interface, POINTER(IAudioEndpointVolume))
 
 def set_volume(level):
